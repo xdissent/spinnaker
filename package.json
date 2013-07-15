@@ -42,10 +42,11 @@
     "grunt-contrib-clean": "~0.4.1",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-shell": "~0.3.1",
-    "sails": "git+https://github.com/balderdashy/sails#development",
+    "sails": "git+https://github.com/balderdashy/sails.git#development",
     "grunt-bower-task": "~0.2.3",
     "grunt-karma": "git+https://github.com/karma-runner/grunt-karma.git",
-    "grunt-contrib-copy": "~0.4.1"
+    "grunt-contrib-copy": "~0.4.1",
+    "karma-ievms": "0.0.2"
   },
   "dependencies": {}
 }
