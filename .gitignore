@@ -1,0 +1,5 @@
+/test/app
+/node_modules
+/bower_components
+/lib
+/libpeerconnection.log

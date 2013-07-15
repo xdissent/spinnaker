@@ -1,0 +1,49 @@
+{
+  "name": "spinnaker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Angular Sails Resources",
+  "main": "./lib/spinnaker.js",
+  "scripts": {
+    "test": "grunt test",
+    "prepublish": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xdissent/spinnaker.git"
+  },
+  "keywords": [
+    "sails",
+    "angular"
+  ],
+  "author": "Greg Thornton <xdissent@me.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xdissent/spinnaker/issues"
+  },
+  "devDependencies": {
+    "karma-script-launcher": "0.0.2",
+    "karma-firefox-launcher": "0.0.3",
+    "karma-chrome-launcher": "0.0.2",
+    "karma-jasmine": "0.0.2",
+    "karma-requirejs": "0.0.2",
+    "karma-coffee-preprocessor": "0.0.2",
+    "karma-phantomjs-launcher": "0.0.2",
+    "karma": "~0.9.4",
+    "karma-browserify": "0.0.3",
+    "coffeeify": "~0.5.1",
+    "coffee-script": "~1.6.3",
+    "bower": "~0.10.0",
+    "karma-ng-scenario": "0.0.2",
+    "grunt-cli": "~0.1.9",
+    "grunt": "~0.4.1",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-clean": "~0.4.1",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-shell": "~0.3.1",
+    "sails": "git+https://github.com/balderdashy/sails#development",
+    "grunt-bower-task": "~0.2.3"
+  },
+  "dependencies": {}
+}
