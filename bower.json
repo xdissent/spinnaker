@@ -9,7 +9,11 @@
     "bower_components",
     "test",
     "tests",
-    "src"
+    "src",
+    "Gruntfile.coffee",
+    "karma.*",
+    "libpeerconnection.log",
+    "package.json"
   ],
   "dependencies": {
     "angular-resource-master": "latest"
