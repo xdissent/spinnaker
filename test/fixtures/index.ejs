@@ -1,13 +1,20 @@
 <div ng-app="app" ng-controller="WidgetListCtrl">
   <button id="create-widget" ng-click="create()">Create Widget</button>
+  <button id="create-widget-http" ng-click="createHTTP()">Create Widget (HTTP)</button>
   <ul>
     <li ng-repeat="widget in widgets" id="widget-{{ widget.id}}">
       <pre>{{ widget }}</pre>
-      <button class="update-widget" id="update-widget-{{ widget.id }}" ng-click="update(widget.id)">
+      <button class="update-widget" ng-click="update(widget)">
         Update Widget
       </button>
-      <button class="destroy-widget" id="destroy-widget-{{ widget.id }}" ng-click="destroy(widget.id)">
+      <button class="destroy-widget" ng-click="destroy(widget)">
         Destroy Widget
+      </button>
+      <button class="update-widget-http" ng-click="updateHTTP(widget)">
+        Update Widget (HTTP)
+      </button>
+      <button class="destroy-widget-http" ng-click="destroyHTTP(widget)">
+        Destroy Widget (HTTP)
       </button>
     </li>
   </ul>

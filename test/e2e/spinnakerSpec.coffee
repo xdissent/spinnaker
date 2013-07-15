@@ -59,3 +59,63 @@ describe 'sails app', ->
     sleep 2
 
     expect(repeat.count()).toBe 0
+
+  it 'creates widgets over HTTP', ->
+    browser().navigateTo '/'
+
+    create = element '#create-widget-http'
+    repeat = repeater 'ul li'
+
+    expect(repeat.count()).toBe 0
+
+    create.click()
+    sleep 1
+    expect(repeat.count()).toBe 1
+
+    create.click()
+    sleep 1
+    expect(repeat.count()).toBe 2
+
+  it 'updates widgets over HTTP', ->
+    browser().navigateTo '/'
+
+    repeat = repeater 'ul li'
+    widget = element 'ul li:first-child pre'
+    update = element 'ul li:first-child .update-widget-http'
+    orig = null
+    updated = null
+
+    sleep 1
+
+    widget.query (el, done) ->
+      orig = (new Date JSON.parse(el.text()).updatedAt).getTime()
+      done()
+
+    sleep 2
+
+    update.click()
+
+    sleep 1
+
+    widget.query (el, done) ->
+      updated = (new Date JSON.parse(el.text()).updatedAt).getTime()
+      expect(value: updated).toBeGreaterThan orig
+      done()
+
+  it 'destroys widgets over HTTP', ->
+    browser().navigateTo '/'
+
+    repeat = repeater 'ul li'
+    destroys = element '.destroy-widget-http'
+
+    sleep 1
+
+    expect(repeat.count()).toBe 2
+
+    destroys.query (el, done) ->
+      el.click()
+      done()
+
+    sleep 2
+
+    expect(repeat.count()).toBe 0

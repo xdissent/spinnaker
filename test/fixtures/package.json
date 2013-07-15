@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "description": "a Sails application",
     "dependencies": {
-        "sails": "git+https://github.com/balderdashy/sails#development",
+        "sails": "git+https://github.com/xdissent/sails#parse-socket-reqs",
         "grunt": "0.4.1",
         "optimist": "0.3.4",
         "forever": "~0.10.8"

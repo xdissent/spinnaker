@@ -11,14 +11,27 @@
     // backend, the scope and UI will be updated to reflect those changes
     // immediately. These raw HTTP requests simulate another process or request
     // manipulating the database out from under us.
-    $scope.create = function () {
+    $scope.createHTTP = function () {
       $http.post('/widget', {});
     };
-    $scope.update = function (id) {
-      $http.put('/widget/' + id, {});
+    $scope.updateHTTP = function (widget) {
+      $http.put('/widget/' + widget.id, {});
     };
-    $scope.destroy = function (id) {
-      $http['delete']('/widget/' + id);
+    $scope.destroyHTTP = function (widget) {
+      $http['delete']('/widget/' + widget.id);
+    };
+
+    // These methods use the more familiar `$resource` interface to the CRUD
+    // endpoints routed over socket.io.
+    $scope.create = function () {
+      var widget = new Widget({});
+      widget.$save();
+    };
+    $scope.update = function (widget) {
+      widget.$update({});
+    };
+    $scope.destroy = function (widget) {
+      widget.$remove();
     };
   };
 
