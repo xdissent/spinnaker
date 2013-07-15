@@ -6,8 +6,8 @@ spinnaker
 
 Sails is realtime web framework for [Node](http://nodejs.org) built on 
 [express](http://expressjs.com) and [socket.io](http://socket.io). AngularJS is
-a super heroic Javascript framework that makes advanced UIs with automatic
-data binding a snap. Spinnaker is an
+a super heroic Javascript framework that makes creating advanced UIs a snap.
+Spinnaker is an
 [Angular Service](http://docs.angularjs.org/guide/dev_guide.services.understanding_services)
 that talks to Sails, modeled after the official
 [ngResource](http://docs.angularjs.org/api/ngResource.$resource) module. Rather
@@ -16,7 +16,7 @@ messages over socket.io. Thanks to Sails' realtime model updates and Angular's
 [two-way data binding](http://docs.angularjs.org/guide/dev_guide.templates.databinding),
 you can query Sails resources like with `$resource`, and the models will be
 updated automatically when the data changes in the backend. If Sails is
-configured to use the `redis` pubsub adapter, you AngularJS frontend can be
+configured to use the `redis` pubsub adapter, an AngularJS frontend can be
 updated live from completely separate server processes.
 
 
@@ -53,7 +53,7 @@ The `lib` folder will contain the build artifacts.
 Usage
 -----
 
-Install Sails 0.9 and create a new app with a model:
+Install Sails 0.9 and create a new app:
 
 ```sh
 $ sudo npm install 'git+https://github.com/balderdashy/sails#development' -g
@@ -62,7 +62,7 @@ $ cd example
 ```
 
 
-Install spinnaker and dependencies into the Sails linker folder:
+Install spinnaker and dependencies into the Sails assets folder via bower:
 
 ```sh
 $ echo '{"directory": "assets/js/components"}' > .bowerrc
@@ -77,11 +77,9 @@ $ sails generate widget
 ```
 
 
-Add spinnaker and its dependencies to your layout:
+Add spinnaker and its dependencies to your layout at `example/views/layout.ejs`:
 
 ```ejs
-<!-- example/views/layout.ejs -->
-
   <!-- ... snip ... -->
 
     <script src="/js/components/angular-unstable/angular.js"></script>
@@ -95,9 +93,16 @@ Add spinnaker and its dependencies to your layout:
 ```
 
 
-Create an angular app at `example/assets/linker/js/app.js`:
+Create an AngularJS app at `example/assets/linker/js/app.js`:
 
 ```js
+// A widgetService module to provide the Widget resource.
+angular.module('widgetService', ['spinnaker'])
+  .factory('Widget', ['spinnaker' , function (spinnaker) {
+    return spinnaker('widget');
+  }]);
+
+// A widget list controller.
 var WidgetListCtrl = function ($scope, Widget) {
   // Use the spinnaker service to query for all Widgets.
   $scope.widgets = Widget.query();
@@ -124,14 +129,9 @@ var WidgetListCtrl = function ($scope, Widget) {
     // $http['delete']('/widget/' + widget.id, widget);
   };
 };
-
 WidgetListCtrl.$inject = ['$scope', 'Widget'];
 
-angular.module('widgetService', ['spinnaker'])
-  .factory('Widget', ['spinnaker' , function (spinnaker) {
-    return spinnaker('widget');
-  }]);
-
+// The AngularJS application.
 angular.module('app', ['widgetService'])
   .controller('WidgetListCtrl', WidgetListCtrl);
 ```
