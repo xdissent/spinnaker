@@ -6,14 +6,15 @@ describe 'sails app', ->
     create = element '#create-widget'
     repeat = repeater 'ul li'
 
+    sleep 2
     expect(repeat.count()).toBe 0
 
     create.click()
-    sleep 1
+    sleep 2
     expect(repeat.count()).toBe 1
 
     create.click()
-    sleep 1
+    sleep 2
     expect(repeat.count()).toBe 2
 
   it 'updates widgets', ->
@@ -25,7 +26,7 @@ describe 'sails app', ->
     orig = null
     updated = null
 
-    sleep 1
+    sleep 2
 
     widget.query (el, done) ->
       orig = (new Date JSON.parse(el.text()).updatedAt).getTime()
@@ -35,7 +36,7 @@ describe 'sails app', ->
 
     update.click()
 
-    sleep 1
+    sleep 2
 
     widget.query (el, done) ->
       updated = (new Date JSON.parse(el.text()).updatedAt).getTime()
@@ -48,7 +49,7 @@ describe 'sails app', ->
     repeat = repeater 'ul li'
     destroys = element '.destroy-widget'
 
-    sleep 1
+    sleep 2
 
     expect(repeat.count()).toBe 2
 
@@ -66,14 +67,15 @@ describe 'sails app', ->
     create = element '#create-widget-http'
     repeat = repeater 'ul li'
 
+    sleep 2
     expect(repeat.count()).toBe 0
 
     create.click()
-    sleep 1
+    sleep 2
     expect(repeat.count()).toBe 1
 
     create.click()
-    sleep 1
+    sleep 2
     expect(repeat.count()).toBe 2
 
   it 'updates widgets over HTTP', ->
@@ -85,7 +87,7 @@ describe 'sails app', ->
     orig = null
     updated = null
 
-    sleep 1
+    sleep 2
 
     widget.query (el, done) ->
       orig = (new Date JSON.parse(el.text()).updatedAt).getTime()
@@ -95,7 +97,7 @@ describe 'sails app', ->
 
     update.click()
 
-    sleep 1
+    sleep 2
 
     widget.query (el, done) ->
       updated = (new Date JSON.parse(el.text()).updatedAt).getTime()
@@ -108,7 +110,7 @@ describe 'sails app', ->
     repeat = repeater 'ul li'
     destroys = element '.destroy-widget-http'
 
-    sleep 1
+    sleep 2
 
     expect(repeat.count()).toBe 2
 
