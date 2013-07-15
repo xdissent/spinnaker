@@ -1,0 +1,20 @@
+{
+    "name": "app",
+    "private": true,
+    "version": "0.0.0",
+    "description": "a Sails application",
+    "dependencies": {
+        "sails": "git+https://github.com/balderdashy/sails#development",
+        "grunt": "0.4.1",
+        "optimist": "0.3.4",
+        "forever": "~0.10.8"
+    },
+    "scripts": {
+        "start": "node app.js",
+        "debug": "node debug app.js"
+    },
+    "main": "app.js",
+    "repository": "",
+    "author": "",
+    "license": ""
+}

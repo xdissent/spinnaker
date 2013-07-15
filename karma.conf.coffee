@@ -13,9 +13,9 @@ module.exports = (karma) ->
 
     # list of files / patterns to load in the browser
     files: [
-      'bower_components/angular-unstable/angular.js'
-      'bower_components/angular-resource-master/angular-resource.js'
-      'bower_components/angular-mocks/angular-mocks.js'
+      'components/angular-unstable/angular.js'
+      'components/angular-resource-master/angular-resource.js'
+      'components/angular-mocks/angular-mocks.js'
       'lib/spinnaker.mock.js'
       'test/unit/**/*Spec.coffee'
     ]

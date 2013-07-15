@@ -1,5 +1,14 @@
 <div ng-app="app" ng-controller="WidgetListCtrl">
+  <button id="create-widget" ng-click="create()">Create Widget</button>
   <ul>
-    <li ng-repeat="widget in widgets"><pre>{{ widget }}</pre></li>
+    <li ng-repeat="widget in widgets" id="widget-{{ widget.id}}">
+      <pre>{{ widget }}</pre>
+      <button class="update-widget" id="update-widget-{{ widget.id }}" ng-click="update(widget.id)">
+        Update Widget
+      </button>
+      <button class="destroy-widget" id="destroy-widget-{{ widget.id }}" ng-click="destroy(widget.id)">
+        Destroy Widget
+      </button>
+    </li>
   </ul>
 </div>
