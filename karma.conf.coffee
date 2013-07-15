@@ -53,7 +53,11 @@ module.exports = (karma) ->
     # - Safari (only Mac)
     # - PhantomJS
     # - IE (only Windows)
-    browsers: ['Chrome']
+    browsers: [
+      'Chrome'
+      # 'IE9 - Win7'
+      # 'IE10 - Win7'
+    ]
 
     # If browser does not capture in given timeout [ms], kill it
     captureTimeout: 60000
