@@ -133,4 +133,42 @@ angular.module('app', ['widgetService'])
 <p>Start the Sails server and visit <code>http://localhost:1337</code>:</p>
 
 <pre><code class="sh">$ sails lift
+</code></pre>
+
+<h2 id="configuration">Configuration</h2>
+
+<p>The spinnaker service is configurable via its provider from any AngularJS 
+module that requires it:</p>
+
+<pre><code class="coffee">angular.module('myApp', ['spinnaker']).config ['spinnakerProvider', (sp) -&gt;
+
+  # Set the socket.io endpoint URL
+  # default: window.location.origin or 'http://localhost:1337'
+
+  sp.setUrl 'https://different.socket.io:911/server/'
+
+  # Enable/disable mock mode (used by unit tests)
+  # default: false
+
+  sp.setMock true
+
+  # Set the list of socket.io verbs available for subscription
+  # default: ['create', 'destroy', 'update']
+
+  sp.setSubscriptions ['create', 'update']
+
+  # Alter the default action methods applied to each resource
+  # default: (shown)
+
+  sp.setDefaultActions
+    get: method: 'GET', subscribe: ['update']
+    save: method: 'POST'
+    query:
+      method:'GET'
+      isArray: true
+      subscribe: ['create', 'destroy', 'update']
+    remove: method: 'DELETE'
+    'delete': method: 'DELETE'
+    update: method: 'PUT'
+]
 </code></pre></div></div></div></div></body></html>
