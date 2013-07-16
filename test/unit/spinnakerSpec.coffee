@@ -3,7 +3,7 @@ describe 'spinnaker', ->
 
   beforeEach module 'spinnaker'
   beforeEach inject ($injector) ->
-    @spinnakerSocket = $injector.get 'spinnakerSocket'
+    @spinnakerMock = $injector.get 'spinnakerMock'
     @spinnaker = $injector.get 'spinnaker'
     @CreditCard = @spinnaker 'cc', '/CreditCard/:id:verb', id:'@id.key',
       charge:
@@ -17,8 +17,8 @@ describe 'spinnaker', ->
     @callback = jasmine.createSpy()
 
   afterEach ->
-    @spinnakerSocket.flush()
-    @spinnakerSocket.verifyNoOutstandingExpectation()
+    @spinnakerMock.flush()
+    @spinnakerMock.verifyNoOutstandingExpectation()
 
   it 'should build resource', ->
     expect(typeof @CreditCard).toBe 'function'
@@ -29,23 +29,23 @@ describe 'spinnaker', ->
     expect(typeof @CreditCard.query).toBe 'function'
 
   it 'should default to empty parameters', ->
-    @spinnakerSocket.expect('GET', 'URL').respond {}
+    @spinnakerMock.expect('GET', 'URL').respond {}
     @spinnaker('name', 'URL').query()
 
 
   it 'should ignore slashes of undefinend parameters', ->
     S = @spinnaker 'Path', '/Path/:a/:b/:c'
 
-    @spinnakerSocket.when('GET', '/Path').respond {}
-    @spinnakerSocket.when('GET', '/Path/0').respond {}
-    @spinnakerSocket.when('GET', '/Path/false').respond {}
-    @spinnakerSocket.when('GET', '/Path').respond {}
-    @spinnakerSocket.when('GET', '/Path').respond {}
-    @spinnakerSocket.when('GET', '/Path').respond {}
-    @spinnakerSocket.when('GET', '/Path/1').respond {}
-    @spinnakerSocket.when('GET', '/Path/2/3').respond {}
-    @spinnakerSocket.when('GET', '/Path/4/5').respond {}
-    @spinnakerSocket.when('GET', '/Path/6/7/8').respond {}
+    @spinnakerMock.when('GET', '/Path').respond {}
+    @spinnakerMock.when('GET', '/Path/0').respond {}
+    @spinnakerMock.when('GET', '/Path/false').respond {}
+    @spinnakerMock.when('GET', '/Path').respond {}
+    @spinnakerMock.when('GET', '/Path').respond {}
+    @spinnakerMock.when('GET', '/Path').respond {}
+    @spinnakerMock.when('GET', '/Path/1').respond {}
+    @spinnakerMock.when('GET', '/Path/2/3').respond {}
+    @spinnakerMock.when('GET', '/Path/4/5').respond {}
+    @spinnakerMock.when('GET', '/Path/6/7/8').respond {}
 
     S.get {}
     S.get a: 0
@@ -61,16 +61,16 @@ describe 'spinnaker', ->
   it 'should not ignore leading slashes of undefinend parameters that have non-slash trailing sequence', ->
     R = @spinnaker 'Path', '/Path/:a.foo/:b.bar/:c.baz'
 
-    @spinnakerSocket.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/0.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/false.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/1.foo/.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/2.foo/3.bar.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/4.foo/.bar/5.baz').respond {}
-    @spinnakerSocket.when('GET', '/Path/6.foo/7.bar/8.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/0.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/false.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/1.foo/.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/2.foo/3.bar.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/4.foo/.bar/5.baz').respond {}
+    @spinnakerMock.when('GET', '/Path/6.foo/7.bar/8.baz').respond {}
 
     R.get {}
     R.get a: 0
@@ -84,13 +84,13 @@ describe 'spinnaker', ->
     R.get a: 6, b: 7, c: 8
 
   it 'should create resource', ->
-    @spinnakerSocket.expect('POST', '/CreditCard', '{"name":"misko"}').respond id: 123, name: 'misko'
+    @spinnakerMock.expect('POST', '/CreditCard', '{"name":"misko"}').respond id: 123, name: 'misko'
 
     cc = @CreditCard.save name: 'misko', @callback
     expect(cc.name).toEqual 'misko'
     expect(@callback).not.toHaveBeenCalled()
 
-    @spinnakerSocket.flush()
+    @spinnakerMock.flush()
     expect(cc.id).toEqual 123
     expect(cc.name).toEqual 'misko'
     expect(@callback).toHaveBeenCalled()
