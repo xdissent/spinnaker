@@ -44,7 +44,7 @@ module.exports = (grunt) ->
     coffee:
       build:
         files:
-          'lib/spinnaker.js': ['src/socket.coffee', 'src/spinnaker.coffee']
+          'lib/spinnaker.js': ['src/spinnaker.coffee']
           'lib/spinnaker.mock.js':
             ['src/spinnaker.coffee', 'src/socket-mock.coffee']
 
