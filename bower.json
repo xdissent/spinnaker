@@ -13,7 +13,8 @@
     "Gruntfile.coffee",
     "karma.*",
     "libpeerconnection.log",
-    "package.json"
+    "package.json",
+    "doc"
   ],
   "dependencies": {
     "angular-resource-master": "latest"
