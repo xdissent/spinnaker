@@ -46,7 +46,7 @@ module.exports = (grunt) ->
         files:
           'lib/spinnaker.js': ['src/socket.coffee', 'src/spinnaker.coffee']
           'lib/spinnaker.mock.js':
-            ['src/socket-mock.coffee', 'src/spinnaker.coffee']
+            ['src/spinnaker.coffee', 'src/socket-mock.coffee']
 
     uglify:
       build:
