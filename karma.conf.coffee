@@ -16,6 +16,7 @@ module.exports = (karma) ->
       'components/angular-unstable/angular.js'
       'components/angular-resource-master/angular-resource.js'
       'components/angular-mocks/angular-mocks.js'
+      'lib/spinnaker.js'
       'lib/spinnaker.mock.js'
       'test/unit/**/*Spec.coffee'
     ]
