@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/xdissent/spinnaker"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/xdissent/spinnaker/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="spinnaker">spinnaker</h1>
+
+<p><a href="http://sailsjs.org">Sails</a> Resources Service for 
+<a href="http://angularjs.org">AngularJS</a></p>
+
+<p>Sails is realtime web framework for <a href="http://nodejs.org">Node</a> built on 
+<a href="http://expressjs.com">express</a> and <a href="http://socket.io">socket.io</a>. AngularJS is
+a super heroic Javascript framework that makes creating advanced UIs a snap.
+Spinnaker is an
+<a href="http://docs.angularjs.org/guide/dev_guide.services.understanding_services">Angular Service</a>
+that talks to Sails, modeled after the official
+<a href="http://docs.angularjs.org/api/ngResource.$resource">ngResource</a> module. Rather
+than communicating with HTTP requests, spinnaker sends and receives realtime
+messages over socket.io. Thanks to Sails' realtime model updates and Angular's
+<a href="http://docs.angularjs.org/guide/dev_guide.templates.databinding">two-way data binding</a>,
+you can query Sails resources like with <code>$resource</code>, and the models will be
+updated automatically when the data changes in the backend. If Sails is
+configured to use the <code>redis</code> pubsub adapter, an AngularJS frontend can be
+updated live from completely separate server processes.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p><a href="http://bower.io">Bower</a> is the preferred installation method. Install bower
+via npm:</p>
+
+<pre><code class="sh">$ sudo npm install bower -g
+</code></pre>
+
+<p>Install spinnaker via bower:</p>
+
+<pre><code class="sh">$ bower install spinnaker --save
+</code></pre>
+
+<p>Building from git is also easy:</p>
+
+<pre><code class="sh">$ git clone https://github.com/xdissent/spinnaker.git
+$ cd spinnaker
+$ npm install
+</code></pre>
+
+<p>The <code>lib</code> folder will contain the build artifacts.</p>
+
+<h2 id="usage">Usage</h2>
+
+<p>Install Sails 0.9 and create a new app:</p>
+
+<pre><code class="sh">$ sudo npm install 'git+https://github.com/balderdashy/sails#development' -g
+$ sails new example --linker
+$ cd example
+</code></pre>
+
+<p>Install spinnaker and dependencies into the Sails assets folder via bower:</p>
+
+<pre><code class="sh">$ echo '{"directory": "assets/js/components"}' &gt; .bowerrc
+$ bower install spinnaker --save
+</code></pre>
+
+<p>Generate a Sails model:</p>
+
+<pre><code class="sh">$ sails generate widget
+</code></pre>
+
+<p>Add spinnaker and its dependencies to your layout at <code>example/views/layout.ejs</code>:</p>
+
+<pre><code class="ejs">  &lt;!-- ... snip ... --&gt;
+
+    &lt;script src="/js/components/angular-unstable/angular.js"&gt;&lt;/script&gt;
+    &lt;script src="/js/components/angular-resource-master/angular-resource.js"&gt;&lt;/script&gt;
+    &lt;script src="/js/components/spinnaker/lib/spinnaker.js"&gt;&lt;/script&gt;
+
+    &lt;!--SCRIPTS--&gt;
+    &lt;!--SCRIPTS END--&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>Create an AngularJS app at <code>example/assets/linker/js/app.js</code>:</p>
+
+<pre><code class="js">// A widgetService module to provide the Widget resource.
+angular.module('widgetService', ['spinnaker'])
+  .factory('Widget', ['spinnaker' , function (spinnaker) {
+    return spinnaker('widget');
+  }]);
+
+// A widget list controller.
+var WidgetListCtrl = function ($scope, Widget) {
+  // Use the spinnaker service to query for all Widgets.
+  $scope.widgets = Widget.query();
+
+  // Create a widget.
+  $scope.create = function () {
+    var widget = new Widget({});
+    widget.$save();
+    // Or create via $http:
+    // $http.post('/widget', {});
+  };
+
+  // Update a widget.
+  $scope.update = function (widget) {
+    widget.$update({});
+    // Or update via $http:
+    // $http.put('/widget/' + widget.id, widget);
+  };
+
+  // Delete a widget.
+  $scope.destroy = function (widget) {
+    widget.$remove();
+    // Or destroy via $http:
+    // $http['delete']('/widget/' + widget.id, widget);
+  };
+};
+WidgetListCtrl.$inject = ['$scope', 'Widget'];
+
+// The AngularJS application.
+angular.module('app', ['widgetService'])
+  .controller('WidgetListCtrl', WidgetListCtrl);
+</code></pre>
+
+<p>Finally create a view for your app in <code>example/views/home/index.ejs</code>:</p>
+
+<pre><code class="ejs">&lt;div ng-app="app" ng-controller="WidgetListCtrl"&gt;
+  &lt;button ng-click="create()"&gt;Create Widget&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li ng-repeat="widget in widgets"&gt;
+      &lt;pre&gt;{{ widget }}&lt;/pre&gt;
+      &lt;button ng-click="update(widget)"&gt;Update Widget&lt;/button&gt;
+      &lt;button ng-click="destroy(widget)"&gt;Destroy Widget&lt;/button&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p>Start the Sails server and visit <code>http://localhost:1337</code>:</p>
+
+<pre><code class="sh">$ sails lift
+</code></pre></div></div></div></div></body></html>

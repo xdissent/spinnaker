@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head><title>src/socket-mock</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="src/socket-mock"><meta name="groc-project-path" content="src/socket-mock.coffee"><meta name="groc-github-url" content="https://github.com/xdissent/spinnaker"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/xdissent/spinnaker/blob/master/src/socket-mock.coffee">src/socket-mock.coffee</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">SpinnakerExpectation</span>
+  <span class="nv">constructor: </span><span class="nf">(@method, @url, @data, @headers) -&gt;</span>
+    <span class="vi">@responded = </span><span class="kc">false</span>
+  <span class="nv">respond: </span><span class="nf">(data={}, headers={}) -&gt;</span>
+    <span class="vi">@response = </span><span class="nv">data: </span><span class="nx">data</span><span class="p">,</span> <span class="nv">headers: </span><span class="nx">headers</span>
+  <span class="nv">matches: </span><span class="nf">(url, data, method) -&gt;</span>
+    <span class="k">return</span> <span class="kc">false</span> <span class="k">if</span> <span class="nx">@responded</span>
+    <span class="k">return</span> <span class="kc">false</span> <span class="k">unless</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@url</span><span class="si">}</span><span class="s">&quot;</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">url</span><span class="si">}</span><span class="s">&quot;</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">false</span> <span class="k">unless</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@method</span><span class="si">}</span><span class="s">&quot;</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">method</span><span class="si">}</span><span class="s">&quot;</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">false</span> <span class="k">unless</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">toJson</span> <span class="nx">@data</span> <span class="o">is</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">toJson</span> <span class="nx">data</span>
+    <span class="kc">true</span>
+  <span class="nv">toString: </span><span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@url</span><span class="si">}</span><span class="s">, </span><span class="si">#{</span><span class="nx">@method</span><span class="si">}</span><span class="s">, </span><span class="si">#{</span><span class="nx">angular</span><span class="p">.</span><span class="nx">toJson</span> <span class="nx">@data</span><span class="si">}</span><span class="s">&quot;</span>
+
+<span class="k">class</span> <span class="nx">SpinnakerMock</span>
+  <span class="nv">constructor: </span><span class="nf">-&gt;</span>
+    <span class="vi">@expectations = </span><span class="p">[]</span>
+    <span class="vi">@responses = </span><span class="p">[]</span>
+
+  <span class="kc">on</span><span class="o">:</span> <span class="nf">-&gt;</span>
+
+  <span class="k">when</span><span class="o">:</span> <span class="nf">-&gt;</span> <span class="nx">@expect</span> <span class="nx">arguments</span><span class="p">...</span>
+
+  <span class="nv">expect: </span><span class="nf">(method, url, data, headers) -&gt;</span>
+    <span class="nv">expectation = </span><span class="k">new</span> <span class="nx">SpinnakerExpectation</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">headers</span>
+    <span class="nx">@expectations</span><span class="p">.</span><span class="nx">push</span> <span class="nx">expectation</span>
+    <span class="nx">expectation</span>
+
+  <span class="nv">request: </span><span class="nf">(url, data, options, method) -&gt;</span>
+    <span class="nv">expectations = </span><span class="p">(</span><span class="nx">exp</span> <span class="k">for</span> <span class="nx">exp</span> <span class="k">in</span> <span class="nx">@expectations</span> <span class="k">when</span> <span class="nx">exp</span><span class="p">.</span><span class="nx">matches</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Unexpected request: </span><span class="si">#{</span><span class="nx">url</span><span class="si">}</span><span class="s">, </span><span class="si">#{</span><span class="nx">method</span><span class="si">}</span><span class="s">&quot;</span> <span class="k">unless</span> <span class="nx">expectations</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="vi">@expectations = </span><span class="p">(</span><span class="nx">exp</span> <span class="k">for</span> <span class="nx">exp</span> <span class="k">in</span> <span class="nx">@expectations</span> <span class="k">when</span> <span class="nx">exp</span> <span class="o">isnt</span> <span class="nx">expectations</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="nx">@responses</span><span class="p">.</span><span class="nx">push</span> <span class="nf">-&gt;</span>
+      <span class="nx">options</span><span class="p">.</span><span class="nx">success</span> <span class="nx">expectations</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span> <span class="k">if</span> <span class="nx">options</span><span class="p">.</span><span class="nx">success</span>
+
+  <span class="nv">flush: </span><span class="nf">-&gt;</span>
+    <span class="nx">response</span><span class="p">()</span> <span class="k">for</span> <span class="nx">response</span> <span class="k">in</span> <span class="nx">@responses</span>
+    <span class="vi">@responses = </span><span class="p">[]</span>
+
+  <span class="nv">verifyNoOutstandingExpectation: </span><span class="nf">-&gt;</span>
+    <span class="k">if</span> <span class="nx">@expectations</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Unsatisfied requests: </span><span class="si">#{</span><span class="nx">@expectations</span><span class="p">.</span><span class="nx">join</span> <span class="s">&#39;, &#39;</span><span class="si">}</span><span class="s">&quot;</span>
+
+<span class="k">class</span> <span class="nx">SpinnakerMockProvider</span>
+  <span class="nv">$get: </span><span class="nf">-&gt;</span> <span class="k">new</span> <span class="nx">SpinnakerMock</span>
+
+<span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s">&#39;spinnaker&#39;</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">provider</span><span class="p">(</span><span class="s">&#39;spinnakerMock&#39;</span><span class="p">,</span> <span class="nx">SpinnakerMockProvider</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">config</span> <span class="p">[</span><span class="s">&#39;spinnakerProvider&#39;</span><span class="p">,</span> <span class="nf">(sp) -&gt;</span> <span class="nx">sp</span><span class="p">.</span><span class="nx">setMock</span> <span class="kc">true</span><span class="p">]</span></div></div></div></div></body></html>
