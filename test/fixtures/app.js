@@ -18,7 +18,7 @@
       $http.put('/widget/' + widget.id, {});
     };
     $scope.destroyHTTP = function (widget) {
-      $http['delete']('/widget/' + widget.id);
+      $http['delete']('/widget/' + widget.id, {data: {}});
     };
 
     // These methods use the more familiar `$resource` interface to the CRUD
@@ -43,6 +43,9 @@
     }]);
 
   angular.module('app', ['widgetService'])
-    .controller('WidgetListCtrl', WidgetListCtrl);
+    .controller('WidgetListCtrl', WidgetListCtrl)
+    .config(['spinnakerProvider', function(spinnakerProvider) {
+      spinnakerProvider.setUrl('http://localhost:1337');
+    }]);
 
 })();
