@@ -34,11 +34,10 @@ class SpinnakerProvider
     $http = (httpConfig) ->
       deferred = $q.defer()
       url = httpConfig?.url ? '/'
-      data = httpConfig?.data ? null
-      options = success: (data) -> $rootScope.$apply ->
-        deferred.resolve data: data
+      data = httpConfig?.data ? {}
+      cb = (data) -> $rootScope.$apply -> deferred.resolve data: data
       method = httpConfig?.method?.toLowerCase() ? 'get'
-      socket.request url, data, options, method
+      socket.request url, data, cb, method
       deferred.promise
 
     # Build a $resource factory using the fake $http service.
