@@ -88,7 +88,7 @@ class SpinnakerProvider
               when 'destroy' then ->
                 # Remove the destroyed resources from the collection.
                 rem = []
-                rem.push i for r, i in response.resource when r.id is msg.data.id
+                rem.push i for r, i in response.resource when r.id is msg.id
                 response.resource.splice i, 1 for i in rem
               when 'update' then ->
                 # Update the resources in the collection.
