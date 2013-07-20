@@ -42,7 +42,7 @@
     "grunt-contrib-clean": "~0.4.1",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-shell": "~0.3.1",
-    "sails": "~0.9.2",
+    "sails": "~0.9.3",
     "grunt-bower-task": "~0.2.3",
     "grunt-karma": "git+https://github.com/karma-runner/grunt-karma.git",
     "grunt-contrib-copy": "~0.4.1",
