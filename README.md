@@ -110,7 +110,9 @@ var WidgetListCtrl = function ($scope, Widget) {
   // Create a widget.
   $scope.create = function () {
     var widget = new Widget({});
-    widget.$save();
+    widget.$save(function (widget) {
+      $scope.widgets.push(widget);
+    });
     // Or create via $http:
     // $http.post('/widget', {});
   };
@@ -124,7 +126,12 @@ var WidgetListCtrl = function ($scope, Widget) {
 
   // Delete a widget.
   $scope.destroy = function (widget) {
-    widget.$remove();
+    widget.$remove(function (widget) {
+      var index = $scope.widgets.indexOf(widget);
+      if (index >= 0) {
+        $scope.widgets.splice(index, 1);
+      }
+    });
     // Or destroy via $http:
     // $http['delete']('/widget/' + widget.id, widget);
   };
