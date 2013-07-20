@@ -25,13 +25,20 @@
     // endpoints routed over socket.io.
     $scope.create = function () {
       var widget = new Widget({});
-      widget.$save();
+      widget.$save(function (widget) {
+        $scope.widgets.push(widget);
+      });
     };
     $scope.update = function (widget) {
       widget.$update({});
     };
     $scope.destroy = function (widget) {
-      widget.$remove();
+      widget.$remove(function (widget) {
+        var index = $scope.widgets.indexOf(widget);
+        if (index >= 0) {
+          $scope.widgets.splice(index, 1);
+        }
+      });
     };
   };
 

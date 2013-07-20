@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "description": "a Sails application",
     "dependencies": {
-        "sails": "git+https://github.com/xdissent/sails.git#maybe-fix-create",
+        "sails": "git+https://github.com/balderdashy/sails.git",
         "grunt": "0.4.1",
         "sails-disk": "~0.9.0",
         "ejs": "0.8.4",
