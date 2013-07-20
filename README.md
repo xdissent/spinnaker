@@ -110,7 +110,9 @@ var WidgetListCtrl = function ($scope, Widget) {
   // Create a widget.
   $scope.create = function () {
     var widget = new Widget({});
-    widget.$save();
+    widget.$save(function (widget) {
+      $scope.widgets.push(widget);
+    });
     // Or create via $http:
     // $http.post('/widget', {});
   };
@@ -124,7 +126,12 @@ var WidgetListCtrl = function ($scope, Widget) {
 
   // Delete a widget.
   $scope.destroy = function (widget) {
-    widget.$remove();
+    widget.$remove(function (widget) {
+      var index = $scope.widgets.indexOf(widget);
+      if (index >= 0) {
+        $scope.widgets.splice(index, 1);
+      }
+    });
     // Or destroy via $http:
     // $http['delete']('/widget/' + widget.id, widget);
   };
@@ -159,3 +166,43 @@ Start the Sails server and visit `http://localhost:1337`:
 $ sails lift
 ```
 
+
+Configuration
+-------------
+
+The spinnaker service is configurable via its provider from any AngularJS 
+module that requires it:
+
+```coffee
+angular.module('myApp', ['spinnaker']).config ['spinnakerProvider', (sp) ->
+
+  # Set the socket.io endpoint URL
+  # default: window.location.origin or 'http://localhost:1337'
+
+  sp.setUrl 'https://different.socket.io:911/server/'
+
+  # Enable/disable mock mode (used by unit tests)
+  # default: false
+
+  sp.setMock true
+
+  # Set the list of socket.io verbs available for subscription
+  # default: ['create', 'destroy', 'update']
+
+  sp.setSubscriptions ['create', 'update']
+
+  # Alter the default action methods applied to each resource
+  # default: (shown)
+
+  sp.setDefaultActions
+    get: method: 'GET', subscribe: ['update']
+    save: method: 'POST'
+    query:
+      method:'GET'
+      isArray: true
+      subscribe: ['create', 'destroy', 'update']
+    remove: method: 'DELETE'
+    'delete': method: 'DELETE'
+    update: method: 'PUT'
+]
+```

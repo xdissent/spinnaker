@@ -34,11 +34,10 @@ class SpinnakerProvider
     $http = (httpConfig) ->
       deferred = $q.defer()
       url = httpConfig?.url ? '/'
-      data = httpConfig?.data ? null
-      options = success: (data) -> $rootScope.$apply ->
-        deferred.resolve data: data
+      data = httpConfig?.data ? {}
+      cb = (data) -> $rootScope.$apply -> deferred.resolve data: data
       method = httpConfig?.method?.toLowerCase() ? 'get'
-      socket.request url, data, options, method
+      socket.request url, data, cb, method
       deferred.promise
 
     # Build a $resource factory using the fake $http service.
@@ -89,7 +88,7 @@ class SpinnakerProvider
               when 'destroy' then ->
                 # Remove the destroyed resources from the collection.
                 rem = []
-                rem.push i for r, i in response.resource when r.id is msg.data.id
+                rem.push i for r, i in response.resource when r.id is msg.id
                 response.resource.splice i, 1 for i in rem
               when 'update' then ->
                 # Update the resources in the collection.

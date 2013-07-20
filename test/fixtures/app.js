@@ -18,20 +18,27 @@
       $http.put('/widget/' + widget.id, {});
     };
     $scope.destroyHTTP = function (widget) {
-      $http['delete']('/widget/' + widget.id);
+      $http['delete']('/widget/' + widget.id, {data: {}});
     };
 
     // These methods use the more familiar `$resource` interface to the CRUD
     // endpoints routed over socket.io.
     $scope.create = function () {
       var widget = new Widget({});
-      widget.$save();
+      widget.$save(function (widget) {
+        $scope.widgets.push(widget);
+      });
     };
     $scope.update = function (widget) {
       widget.$update({});
     };
     $scope.destroy = function (widget) {
-      widget.$remove();
+      widget.$remove(function (widget) {
+        var index = $scope.widgets.indexOf(widget);
+        if (index >= 0) {
+          $scope.widgets.splice(index, 1);
+        }
+      });
     };
   };
 
@@ -43,6 +50,9 @@
     }]);
 
   angular.module('app', ['widgetService'])
-    .controller('WidgetListCtrl', WidgetListCtrl);
+    .controller('WidgetListCtrl', WidgetListCtrl)
+    .config(['spinnakerProvider', function(spinnakerProvider) {
+      spinnakerProvider.setUrl('http://localhost:1337');
+    }]);
 
 })();
