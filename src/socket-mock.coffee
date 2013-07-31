@@ -26,7 +26,6 @@ class SpinnakerMock
     expectation
 
   request: (url, data, cb, method) ->
-    # console.log arguments...
     method ?= 'get'
     [cb, data] = [data, {}] if typeof data is 'function'
     expectations = (exp for exp in @expectations when exp.matches url, data, method)
