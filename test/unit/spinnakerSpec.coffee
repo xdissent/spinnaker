@@ -78,13 +78,13 @@ describe 'spinnaker', ->
 
   it 'should create resource', ->
     Widget = @spinnaker 'widget'
-    @spinnakerMock.expect('POST', '/widget', '{"name":"misko"}').respond id: 123, name: 'misko'
+    @spinnakerMock.expect('POST', '/widget', name: 'misko').respond id: 123, name: 'misko'
 
     w = Widget.save name: 'misko', @callback
-    # expect(w.name).toEqual 'misko'
-    # expect(@callback).not.toHaveBeenCalled()
+    expect(w.name).toEqual 'misko'
+    expect(@callback).not.toHaveBeenCalled()
 
-    # @spinnakerMock.flush()
-    # expect(cc.id).toEqual 123
-    # expect(cc.name).toEqual 'misko'
-    # expect(@callback).toHaveBeenCalled()
+    @spinnakerMock.flush()
+    expect(w.id).toEqual 123
+    expect(w.name).toEqual 'misko'
+    expect(@callback).toHaveBeenCalled()
