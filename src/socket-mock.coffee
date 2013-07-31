@@ -26,12 +26,17 @@ class SpinnakerMock
     expectation
 
   request: (url, data, cb, method) ->
+    # console.log arguments...
     method ?= 'get'
     [cb, data] = [data, {}] if typeof data is 'function'
     expectations = (exp for exp in @expectations when exp.matches url, data, method)
     throw new Error "Unexpected request: #{url}, #{method}" unless expectations.length > 0
     @expectations = (exp for exp in @expectations when exp isnt expectations[0])
     @responses.push -> cb expectations[0].response.data if cb?
+
+  get: (url, data, cb) -> @request url, data, cb, 'get'
+  post: (url, data, cb) -> @request url, data, cb, 'post'
+  'delete': (url, data, cb) -> @request url, data, cb, 'delete'
 
   flush: ->
     response() for response in @responses

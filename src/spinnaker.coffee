@@ -3,17 +3,36 @@ class SpinnakerProvider
     # All available socket.io message verb for subscription.
     @subscriptions = ['create', 'destroy', 'update']
 
+    @instanceFilter = (model, params, subscribe, resource, msg) ->
+      return false unless msg.model is model and msg.id is resource.id
+      subscribe = subscribe arguments... if angular.isFunction subscribe
+      return false unless angular.isArray subscribe and msg.verb in subscribe
+      true
+
+    @collectionFilter = (model, params, subscribe, resource, msg) ->
+      return false unless msg.model is model
+      subscribe = subscribe arguments... if angular.isFunction subscribe
+      return false unless angular.isArray subscribe and msg.verb in subscribe
+      true
+
     # Default actions from $resource plus subscriptions and `update`.
     @defaultActions =
-      get: method: 'GET', subscribe: ['update']
-      save: method: 'POST'
+      get: method: 'get', subscribe: ['update'] #, filter: @instanceFilter
+      create: method: 'post'
+      save: method: (params) -> if params?.id? then 'put' else 'post'
+      destroy: method: 'delete'
       query:
-        method:'GET'
+        method: 'get'
         isArray: true
         subscribe: ['create', 'destroy', 'update']
-      remove: method: 'DELETE'
-      'delete': method: 'DELETE'
-      update: method: 'PUT'
+        # filter: @collectionFilter
+      # builds:
+      #   url: '/dock/:id/builds'
+      #   method:'GET'
+      #   isArray: true
+      #   resource: Build
+      #   subscribe: ['create', 'destroy', 'update']
+      #   filter: (model, resource, msg) ->
 
   setUrl: (@url) ->
   setMock: (@mock) ->
@@ -21,97 +40,69 @@ class SpinnakerProvider
   setDefaultActions: (@defaultActions) ->
 
   $get: ($injector) ->
-    inject = ['$window', '$rootScope', '$parse', '$q']
+    inject = ['$window', '$rootScope', '$q']
     inject.push 'spinnakerMock' if @mock
     inject.push @service.bind @
     $injector.invoke inject
 
-  service: ($window, $rootScope, $parse, $q, spinnakerMock) ->
+  service: ($window, $rootScope, $q, spinnakerMock) ->
     origin = @url ? $window.location?.origin ? 'http://localhost:1337'
     socket = spinnakerMock ? $window.io.connect origin
 
-    # Fake $http service hijacks $resource requests and send them over socket.io.
-    $http = (httpConfig) ->
+    socketRequest = ->
       deferred = $q.defer()
-      url = httpConfig?.url ? '/'
-      data = httpConfig?.data ? {}
-      cb = (data) -> $rootScope.$apply -> deferred.resolve data: data
-      method = httpConfig?.method?.toLowerCase() ? 'get'
-      socket.request url, data, cb, method
+      socket[action.method] url, data, (data) -> deferred.resolve data
       deferred.promise
 
-    # Build a $resource factory using the fake $http service.
-    $resource = angular.module('ngResource')
-      ._invokeQueue[0][2]['1'][3] $http, $parse, $q
-
-    # $resource factory wrapper to add resource interceptors.
-    (name, url="/#{name}/:id", paramDefaults={id: '@id'}, actions) =>
-
-      # The resource class, created by calling $resource() later.
-      Resource = null
-
+    (model, url="/#{model}/:id", actions) =>
       # Add custom actions from arguments.
       actions = angular.extend {}, @defaultActions, actions
 
-      # Resource response interceptor to subscribe to updates from Sails.
-      interceptor = (actionName, action) => response: (response) =>
+      parseUrl = (url, params) ->
+        url = url.replace ":#{k}", v for k, v of params when v?
+        url = url.replace /\/?:\w+/g, ''
+        url.replace /\/$/, ''
 
-        # Bail unless there are subscriptions.
-        return response.resource unless action.subscribe?
+      request = (url, data={}, method='get') ->
+        console.log arguments...
+        deferred = $q.defer()
+        socket[method] url, data, (data) -> deferred.resolve data
+        deferred.promise
 
-        # Subscribe to a single subscription, an array, or a function.
-        subs = if action.subscribe in @subscriptions
-          # It's a string, push it into an array.
-          [].concat action.subscribe 
-        else
-          # It's an array or function.
-          action.subscribe
+      createAction = (action) -> (a1, a2, a3, a4) ->
+        console.log arguments...
+        [params, data, success, error] = switch arguments.length
+          when 4 then [a1, a2, a3, a4]
+          when 3, 2
+            if angular.isFunction a2
+              if angular.isFunction a1
+                [null, null, a1, a2]
+              else
+                [a1, null, a2, a3]
+            else
+              [a1, a2, a3, a4]
+          when 1
+            if angular.isFunction a1
+              [null, null, null, a1]
+            else
+              [a1, null, null, null]
+          else [null, null, null, null]
 
-        # Listen for messages and fire off subscriptions.
-        socket.on 'message', (msg) ->
+        instCall = @ instanceof Resource
+        params ?= if instCall then @ else {}
+        method = if angular.isFunction action.method then action.method params else action.method ? 'get'
+        data ?= params if /^(POST|PUT|PATCH)$/i.test method
+        console.log instCall, params, data, method
+        request parseUrl(action.url ? url, params), data, method, (data) ->
+          success data if success?
+        , (err) ->
+          error err if error?
 
-          # Call function subscription with raw message and bail.
-          return subs response.resource, msg if angular.isFunction subs
+      class Resource
+        @[actionName] = createAction action for actionName, action of actions
+        constructor: (data) ->
+          copy data, @ if data?
+          @[actionName] = createAction(action).bind @ for actionName, action of actions
 
-          # Bail if the msg isn't for us.
-          return null unless msg.model is name and msg.verb in subs
-
-          # A callback to apply within the $rootScope.
-          cb = null
-
-          # Collection actions
-          if action.isArray
-            cb = switch msg.verb
-              when 'create' then ->
-                # Add a new resource to the collection.
-                response.resource.push new Resource msg.data
-              when 'destroy' then ->
-                # Remove the destroyed resources from the collection.
-                rem = []
-                rem.push i for r, i in response.resource when r.id is msg.id
-                response.resource.splice i, 1 for i in rem
-              when 'update' then ->
-                # Update the resources in the collection.
-                angular.copy msg.data, r for r in response.resource when r.id is msg.data.id
-
-          # Instance actions
-          else
-            cb = switch msg.verb
-              when 'update' then ->
-                # Update the resource directly.
-                angular.copy msg.data, response.resource if msg.data.id is response.resource.id
-
-          # Apply the callback within the $rootScope if one was found.
-          $rootScope.$apply cb if cb?
-
-        # Return the resource.
-        response.resource
-
-      # Add the interceptor to each action.
-      a.interceptor = interceptor(n, a) for n, a of actions
-
-      # Create and return the $resource class.
-      Resource = $resource url, paramDefaults, actions
-
-angular.module('spinnaker', ['ngResource'])
+angular.module('spinnaker', [])
   .provider 'spinnaker', SpinnakerProvider
