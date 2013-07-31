@@ -40,6 +40,13 @@ module.exports = (grunt) ->
           src: ['package.json']
           dest: 'test/app'
         ]
+      testLog:
+        files: [
+          expand: true
+          cwd: 'test/fixtures'
+          src: ['log.js']
+          dest: 'test/app/config'
+        ]
 
     coffee:
       build:
@@ -100,6 +107,7 @@ module.exports = (grunt) ->
     'concat:test'
     'copy:test'
     'copy:testNpm'
+    'copy:testLog'
     'clean:testNpm'
     'shell:testNpm'
     'shell:testModel'
