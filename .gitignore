@@ -2,5 +2,6 @@
 /node_modules
 /bower_components
 /components
+/lib
 /libpeerconnection.log
 /doc

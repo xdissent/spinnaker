@@ -33,6 +33,10 @@
     <span class="vi">@expectations = </span><span class="p">(</span><span class="nx">exp</span> <span class="k">for</span> <span class="nx">exp</span> <span class="k">in</span> <span class="nx">@expectations</span> <span class="k">when</span> <span class="nx">exp</span> <span class="o">isnt</span> <span class="nx">expectations</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="nx">@responses</span><span class="p">.</span><span class="nx">push</span> <span class="nf">-&gt;</span> <span class="nx">cb</span> <span class="nx">expectations</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span> <span class="k">if</span> <span class="nx">cb</span><span class="o">?</span>
 
+  <span class="nv">get: </span><span class="nf">(url, data, cb) -&gt;</span> <span class="nx">@request</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="s">&#39;get&#39;</span>
+  <span class="nv">post: </span><span class="nf">(url, data, cb) -&gt;</span> <span class="nx">@request</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="s">&#39;post&#39;</span>
+  <span class="s">&#39;delete&#39;</span><span class="o">:</span> <span class="nf">(url, data, cb) -&gt;</span> <span class="nx">@request</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">cb</span><span class="p">,</span> <span class="s">&#39;delete&#39;</span>
+
   <span class="nv">flush: </span><span class="nf">-&gt;</span>
     <span class="nx">response</span><span class="p">()</span> <span class="k">for</span> <span class="nx">response</span> <span class="k">in</span> <span class="nx">@responses</span>
     <span class="vi">@responses = </span><span class="p">[]</span>
