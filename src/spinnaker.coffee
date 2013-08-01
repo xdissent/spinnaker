@@ -61,6 +61,8 @@ class SpinnakerProvider
         method = action.method params if angular.isFunction action.method
         data ?= params if /^(POST|PUT|PATCH|DELETE)$/i.test method
         resourceClass = action.resource ? Resource
+        filter = -> true
+        filter = action.filter if angular.isFunction action.filter
         value = if action.isArray
           new ResourceCollection resourceClass
         else
@@ -99,7 +101,6 @@ class SpinnakerProvider
 
       ResourceCollection = (resourceClass) ->
         collection = new Array
-        collection.resourceClass = resourceClass
         collection.subscribe = subscribe.bind collection
         collection.unsubscribe = unsubscribe.bind collection
         collection._msgHandler = (msg) ->
@@ -107,7 +108,8 @@ class SpinnakerProvider
           $rootScope.$apply ->
             switch msg.verb
               when 'create'
-                collection.push (new resourceClass msg.data).subscribe()
+                if filter msg.data
+                  collection.push (new resourceClass msg.data).subscribe() 
               when 'destroy'
                 rem = []
                 for r, i in collection when r?.id? and r.id is msg.id
