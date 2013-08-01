@@ -19,6 +19,8 @@ updated automatically when the data changes in the backend. If Sails is
 configured to use the `redis` pubsub adapter, an AngularJS frontend can be
 updated live from completely separate server processes.
 
+**tl;dr Spinnaker hooks AngularJS up to Sails for live data updates.**
+
 
 Installation
 ------------
@@ -77,13 +79,12 @@ $ sails generate widget
 ```
 
 
-Add spinnaker and its dependencies to your layout at `example/views/layout.ejs`:
+Add spinnaker and AngularJS to your layout at `example/views/layout.ejs`:
 
 ```ejs
   <!-- ... snip ... -->
 
     <script src="/js/components/angular-unstable/angular.js"></script>
-    <script src="/js/components/angular-resource-master/angular-resource.js"></script>
     <script src="/js/components/spinnaker/lib/spinnaker.js"></script>
 
     <!--SCRIPTS-->
@@ -110,7 +111,7 @@ var WidgetListCtrl = function ($scope, Widget) {
   // Create a widget.
   $scope.create = function () {
     var widget = new Widget({});
-    widget.$save(function (widget) {
+    widget.save(function (widget) {
       $scope.widgets.push(widget);
     });
     // Or create via $http:
@@ -119,14 +120,14 @@ var WidgetListCtrl = function ($scope, Widget) {
 
   // Update a widget.
   $scope.update = function (widget) {
-    widget.$update({});
+    widget.update({});
     // Or update via $http:
     // $http.put('/widget/' + widget.id, widget);
   };
 
   // Delete a widget.
   $scope.destroy = function (widget) {
-    widget.$remove(function (widget) {
+    widget.destroy(function () {
       var index = $scope.widgets.indexOf(widget);
       if (index >= 0) {
         $scope.widgets.splice(index, 1);
@@ -186,23 +187,15 @@ angular.module('myApp', ['spinnaker']).config ['spinnakerProvider', (sp) ->
 
   sp.setMock true
 
-  # Set the list of socket.io verbs available for subscription
-  # default: ['create', 'destroy', 'update']
-
-  sp.setSubscriptions ['create', 'update']
-
   # Alter the default action methods applied to each resource
   # default: (shown)
 
   sp.setDefaultActions
-    get: method: 'GET', subscribe: ['update']
-    save: method: 'POST'
-    query:
-      method:'GET'
-      isArray: true
-      subscribe: ['create', 'destroy', 'update']
-    remove: method: 'DELETE'
-    'delete': method: 'DELETE'
-    update: method: 'PUT'
+    get: method: 'get'
+    create: method: 'post'
+    save: method: (params) -> if params?.id? then 'put' else 'post'
+    update: method: 'put'
+    destroy: method: 'delete'
+    query: method: 'get', isArray: true
 ]
 ```
