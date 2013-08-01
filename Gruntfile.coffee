@@ -19,7 +19,6 @@ module.exports = (grunt) ->
       test:
         src: [
           'components/angular-unstable/angular.js'
-          'components/angular-resource-master/angular-resource.js'
           'lib/spinnaker.js'
           'test/fixtures/app.js'
         ],

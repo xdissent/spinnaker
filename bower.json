@@ -1,6 +1,6 @@
 {
   "name": "spinnaker",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./lib/spinnaker.js",
   "ignore": [
     "**/.*",
@@ -17,7 +17,7 @@
     "doc"
   ],
   "dependencies": {
-    "angular-resource-master": "latest"
+    "angular-unstable": "latest"
   },
   "devDependencies": {
     "angular-mocks": "~1.0.7"
