@@ -61,7 +61,7 @@ describe 'sails app', ->
 
     expect(repeat.count()).toBe 0
 
-  xit 'creates widgets over HTTP', ->
+  it 'creates widgets over HTTP', ->
     browser().navigateTo '/'
 
     create = element '#create-widget-http'
@@ -78,7 +78,7 @@ describe 'sails app', ->
     sleep 2
     expect(repeat.count()).toBe 2
 
-  xit 'updates widgets over HTTP', ->
+  it 'updates widgets over HTTP', ->
     browser().navigateTo '/'
 
     repeat = repeater 'ul li'
@@ -104,7 +104,7 @@ describe 'sails app', ->
       expect(value: updated).toBeGreaterThan orig
       done()
 
-  xit 'destroys widgets over HTTP', ->
+  it 'destroys widgets over HTTP', ->
     browser().navigateTo '/'
 
     repeat = repeater 'ul li'
