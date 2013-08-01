@@ -1,43 +1,15 @@
 class SpinnakerProvider
   constructor: ->
-    # All available socket.io message verb for subscription.
-    @subscriptions = ['create', 'destroy', 'update']
-
-    @instanceFilter = (model, params, subscribe, resource, msg) ->
-      return false unless msg.model is model and msg.id is resource.id
-      subscribe = subscribe arguments... if angular.isFunction subscribe
-      return false unless angular.isArray subscribe and msg.verb in subscribe
-      true
-
-    @collectionFilter = (model, params, subscribe, resource, msg) ->
-      return false unless msg.model is model
-      subscribe = subscribe arguments... if angular.isFunction subscribe
-      return false unless angular.isArray subscribe and msg.verb in subscribe
-      true
-
-    # Default actions from $resource plus subscriptions and `update`.
     @defaultActions =
-      get: method: 'get', subscribe: ['update'] #, filter: @instanceFilter
-      create: method: 'post', subscribe: ['update']
-      save: subscribe: ['update'], method: (params) -> if params?.id? then 'put' else 'post'
+      get: method: 'get'
+      create: method: 'post'
+      save: method: (params) -> if params?.id? then 'put' else 'post'
       update: method: 'put'
       destroy: method: 'delete'
-      query:
-        method: 'get'
-        isArray: true
-        subscribe: ['create', 'destroy', 'update']
-        # filter: @collectionFilter
-      # builds:
-      #   url: '/dock/:id/builds'
-      #   method:'GET'
-      #   isArray: true
-      #   resource: Build
-      #   subscribe: ['create', 'destroy', 'update']
-      #   filter: (model, resource, msg) ->
+      query: method: 'get', isArray: true
 
   setUrl: (@url) ->
   setMock: (@mock) ->
-  setSubscriptions: (@subscriptions) ->
   setDefaultActions: (@defaultActions) ->
 
   $get: ($injector) ->
@@ -85,22 +57,26 @@ class SpinnakerProvider
 
         instCall = @ instanceof Resource
         params ?= if instCall then @ else {}
-        method = if angular.isFunction action.method then action.method params else action.method ? 'get'
+        method = action.method ? 'get'
+        method = action.method params if angular.isFunction action.method
         data ?= params if /^(POST|PUT|PATCH|DELETE)$/i.test method
-        resource = action.resource ? Resource
-        value = if action.isArray then [] else if instCall then @ else new resource data
+        resourceClass = action.resource ? Resource
+        value = if action.isArray
+          new ResourceCollection resourceClass
+        else
+          if instCall then @ else new resourceClass data
         promise = request(parseUrl(action.url ? url, params), data, method).then (data) ->
           promise = value.$promise
           if data?
             if action.isArray
               value.length = 0
-              value.push new resource d for d in data
+              value.push (new resourceClass d).subscribe() for d in data
             else
               angular.copy data, value
               value.$promise = promise
           value.$resolved = true
+          value.subscribe()
           success data if success?
-          value
         , (err) ->
           value.$resolved = true
           error err if error?
@@ -110,9 +86,45 @@ class SpinnakerProvider
         value.$resolved = false
         value
 
+      subscribe = ->
+        @unsubscribe()
+        @_subscription = @_msgHandler.bind @
+        socket.on 'message', @_subscription
+        @
+
+      unsubscribe = ->
+        socket.removeListener 'message', @_subscription if @_subscription?
+        @_subscription = null
+        @
+
+      ResourceCollection = (resourceClass) ->
+        collection = new Array
+        collection.resourceClass = resourceClass
+        collection.subscribe = subscribe.bind collection
+        collection.unsubscribe = unsubscribe.bind collection
+        collection._msgHandler = (msg) ->
+          return false unless msg.model is resourceClass.model
+          $rootScope.$apply ->
+            switch msg.verb
+              when 'create'
+                collection.push (new resourceClass msg.data).subscribe()
+              when 'destroy'
+                rem = []
+                for r, i in collection when r?.id? and r.id is msg.id
+                  rem.push i
+                  r.unsubscribe()
+                collection.splice i, 1 for i in rem
+        collection
+
       class Resource
+        @model: model
         @[name] = createAction action for name, action of actions
         constructor: (data) -> angular.copy data, @ if data?
+        subscribe: subscribe
+        unsubscribe: unsubscribe
+        _msgHandler: (msg) ->
+          if msg.model is @constructor.model and msg.id is @id and msg.verb is 'update'
+            $rootScope.$apply => angular.copy msg.data, @ if msg.data?
 
       for name, action of actions
         do (name, action) ->
