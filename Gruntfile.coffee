@@ -19,7 +19,6 @@ module.exports = (grunt) ->
       test:
         src: [
           'components/angular-unstable/angular.js'
-          'components/angular-resource-master/angular-resource.js'
           'lib/spinnaker.js'
           'test/fixtures/app.js'
         ],
@@ -39,6 +38,13 @@ module.exports = (grunt) ->
           cwd: 'test/fixtures'
           src: ['package.json']
           dest: 'test/app'
+        ]
+      testLog:
+        files: [
+          expand: true
+          cwd: 'test/fixtures'
+          src: ['log.js']
+          dest: 'test/app/config'
         ]
 
     coffee:
@@ -100,6 +106,7 @@ module.exports = (grunt) ->
     'concat:test'
     'copy:test'
     'copy:testNpm'
+    'copy:testLog'
     'clean:testNpm'
     'shell:testNpm'
     'shell:testModel'

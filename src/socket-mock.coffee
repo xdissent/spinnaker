@@ -33,6 +33,10 @@ class SpinnakerMock
     @expectations = (exp for exp in @expectations when exp isnt expectations[0])
     @responses.push -> cb expectations[0].response.data if cb?
 
+  get: (url, data, cb) -> @request url, data, cb, 'get'
+  post: (url, data, cb) -> @request url, data, cb, 'post'
+  'delete': (url, data, cb) -> @request url, data, cb, 'delete'
+
   flush: ->
     response() for response in @responses
     @responses = []
