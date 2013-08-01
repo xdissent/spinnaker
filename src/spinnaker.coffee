@@ -62,7 +62,7 @@ class SpinnakerProvider
         data ?= params if /^(POST|PUT|PATCH|DELETE)$/i.test method
         resourceClass = action.resource ? Resource
         value = if action.isArray
-          new ResourceCollection resourceClass, action.filter
+          new ResourceCollection resourceClass, params, action.filter
         else
           if instCall then @ else new resourceClass data
         promise = request(parseUrl(action.url ? url, params), data, method).then (data) ->
@@ -97,14 +97,14 @@ class SpinnakerProvider
         @_subscription = null
         @
 
-      ResourceCollection = (resourceClass, filter) ->
+      ResourceCollection = (resourceClass, params, filter) ->
         filter ?= -> true
         collection = new Array
         collection.subscribe = subscribe.bind collection
         collection.unsubscribe = unsubscribe.bind collection
         collection._msgHandler = (msg) ->
           return false unless msg.model is resourceClass.model
-          return false if msg.verb is 'create' and !filter msg.data
+          return false if msg.verb is 'create' and !filter msg.data, params
           $rootScope.$apply ->
             switch msg.verb
               when 'create'
