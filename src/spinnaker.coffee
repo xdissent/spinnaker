@@ -6,7 +6,10 @@ class SpinnakerProvider
       save: method: (params) -> if params?.id? then 'put' else 'post'
       update: method: 'put'
       destroy: method: 'delete'
-      query: method: 'get', isArray: true
+      query: method: 'get', isArray: true, filter: (msgData, params, data) ->
+        for k, v of data
+          return false unless angular.equals msgData[k], v
+        true
 
   setUrl: (@url) ->
   setMock: (@mock) ->
@@ -62,7 +65,7 @@ class SpinnakerProvider
         data ?= params if /^(POST|PUT|PATCH|DELETE)$/i.test method
         resourceClass = action.resource ? Resource
         value = if action.isArray
-          new ResourceCollection resourceClass, params, action.filter
+          new ResourceCollection resourceClass, params, data, action.filter
         else
           if instCall then @ else new resourceClass data
         promise = request(parseUrl(action.url ? url, params), data, method).then (data) ->
@@ -97,25 +100,30 @@ class SpinnakerProvider
         @_subscription = null
         @
 
-      ResourceCollection = (resourceClass, params, filter) ->
+      ResourceCollection = (resourceClass, params, data, filter) ->
         filter ?= -> true
         collection = new Array
         collection.subscribe = subscribe.bind collection
         collection.unsubscribe = unsubscribe.bind collection
         collection._msgHandler = (msg) ->
           return false unless msg.model is resourceClass.model
-          return false if msg.verb is 'create' and !filter msg.data, params
+          return false if msg.verb is 'create' and !filter msg.data, params, data
           $rootScope.$apply ->
             switch msg.verb
               when 'create'
-                if filter msg.data
-                  collection.push (new resourceClass msg.data).subscribe()
+                collection.push (new resourceClass msg.data).subscribe()
               when 'destroy'
                 rem = []
                 for r, i in collection when r?.id? and r.id is msg.id
                   rem.push i
                   r.unsubscribe()
                 collection.splice i, 1 for i in rem
+              when 'update'
+                existing = (i for r, i in collection when r?.id? and r.id is msg.id)
+                if filter msg.data, params, data
+                  collection.push (new resourceClass msg.data).subscribe() if existing.length is 0
+                else
+                  collection.splice i, 1 for i in existing
         collection
 
       class Resource

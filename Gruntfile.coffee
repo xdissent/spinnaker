@@ -12,13 +12,13 @@ module.exports = (grunt) ->
     pkg: grunt.file.readJSON 'package.json'
 
     clean:
-      build: ['components', 'lib', 'test/app']
+      build: ['bower_components', 'lib', 'test/app']
       testNpm: ['test/app/node_modules']
 
     concat:
       test:
         src: [
-          'components/angular-unstable/angular.js'
+          'bower_components/angular-unstable/angular.js'
           'lib/spinnaker.js'
           'test/fixtures/app.js'
         ],
