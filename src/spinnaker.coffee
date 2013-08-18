@@ -37,7 +37,9 @@ class SpinnakerProvider
       request = (url, data={}, method='get') ->
         deferred = $q.defer()
         socket[method] url, data, (data) ->
-          $rootScope.$apply -> deferred.resolve data
+          $rootScope.$apply ->
+            return deferred.reject data if data.status?
+            deferred.resolve data
         deferred.promise
 
       createAction = (action) -> (a1, a2, a3, a4) ->

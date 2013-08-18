@@ -1,6 +1,6 @@
 {
   "name": "spinnaker",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "description": "Angular Sails Resources",
   "main": "./lib/spinnaker.js",
@@ -43,7 +43,7 @@
     "grunt-contrib-concat": "~0.3.0",
     "grunt-shell": "~0.3.1",
     "sails": "~0.9.3",
-    "grunt-bower-task": "~0.2.3",
+    "grunt-bower-task": "~0.3.1",
     "grunt-karma": "~0.5.4",
     "grunt-contrib-copy": "~0.4.1",
     "karma-ievms": "0.0.2",

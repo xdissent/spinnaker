@@ -5,7 +5,6 @@ describe 'spinnaker', ->
   beforeEach inject ($injector) ->
     @spinnakerMock = $injector.get 'spinnakerMock'
     @spinnaker = $injector.get 'spinnaker'
-    @callback = jasmine.createSpy()
 
   afterEach ->
     @spinnakerMock.flush()
@@ -80,11 +79,28 @@ describe 'spinnaker', ->
     Widget = @spinnaker 'widget'
     @spinnakerMock.expect('POST', '/widget', name: 'misko').respond id: 123, name: 'misko'
 
-    w = Widget.save name: 'misko', @callback
+    cb = jasmine.createSpy()
+    w = Widget.save name: 'misko', cb
     expect(w.name).toEqual 'misko'
-    expect(@callback).not.toHaveBeenCalled()
+    expect(cb).not.toHaveBeenCalled()
 
     @spinnakerMock.flush()
     expect(w.id).toEqual 123
     expect(w.name).toEqual 'misko'
-    expect(@callback).toHaveBeenCalled()
+    expect(cb).toHaveBeenCalled()
+
+
+  it 'should handle errors', ->
+    Widget = @spinnaker 'widget'
+    @spinnakerMock.expect('POST', '/widget', name: 'misko').respond status: 503
+
+    cbSuccess = jasmine.createSpy()
+    cbError = jasmine.createSpy()
+    w = Widget.save name: 'misko', cbSuccess, cbError
+    expect(cbSuccess).not.toHaveBeenCalled()
+    expect(cbError).not.toHaveBeenCalled()
+
+    @spinnakerMock.flush()
+    expect(cbSuccess).not.toHaveBeenCalled()
+    expect(cbError).toHaveBeenCalled()
+
