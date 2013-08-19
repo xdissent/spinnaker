@@ -170,5 +170,13 @@ module that requires it:</p>
     update: method: 'put'
     destroy: method: 'delete'
     query: method: 'get', isArray: true
+
+  # Change the global interceptors (which are no-ops by default)
+  # default: (shown)
+
+  sp.setDefaultInterceptor ['$q', ($q) -&gt;
+    success: (resource) -&gt; resource
+    error: (err) -&gt; $q.reject err
+  ]
 ]
 </code></pre></div></div></div></div></body></html>
