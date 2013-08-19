@@ -1,5 +1,9 @@
 class SpinnakerProvider
   constructor: ->
+    @defaultInterceptor = ['$q', ($q) ->
+      success: (resource) -> resource
+      error: (err) -> $q.reject err
+    ]
     @defaultActions =
       get: method: 'get'
       create: method: 'post'
@@ -14,20 +18,27 @@ class SpinnakerProvider
   setUrl: (@url) ->
   setMock: (@mock) ->
   setDefaultActions: (@defaultActions) ->
+  setDefaultInterceptor: (@defaultInterceptor) ->
 
   $get: ($injector) ->
-    inject = ['$window', '$rootScope', '$q']
+    inject = ['$injector', '$window', '$rootScope', '$q']
     inject.push 'spinnakerMock' if @mock
     inject.push @service.bind @
     $injector.invoke inject
 
-  service: ($window, $rootScope, $q, spinnakerMock) ->
+  service: ($injector, $window, $rootScope, $q, spinnakerMock) ->
     origin = @url ? $window.location?.origin ? 'http://localhost:1337'
     socket = spinnakerMock ? $window.io.connect origin
+    interceptor = $injector.invoke @defaultInterceptor
 
     (model, url="/#{model}/:id", actions) =>
       # Add custom actions from arguments.
       actions = angular.extend {}, @defaultActions, actions
+      
+      for n, action of actions
+        action.interceptor ?= {}
+        action.interceptor.success ?= interceptor.success
+        action.interceptor.error ?= interceptor.error
 
       parseUrl = (url, params) ->
         url = url.replace ":#{k}", v for k, v of params when v?
@@ -71,21 +82,23 @@ class SpinnakerProvider
         else
           if instCall then @ else new resourceClass data
         promise = request(parseUrl(action.url ? url, params), data, method).then (data) ->
-          promise = value.$promise
           if data?
             if action.isArray
               value.length = 0
               value.push (new resourceClass d).subscribe() for d in data
             else
+              promise = value.$promise
               angular.copy data, value
               value.$promise = promise
           value.$resolved = true
           value.subscribe()
-          success data if success?
+          success value if success?
+          value
         , (err) ->
           value.$resolved = true
           error err if error?
           $q.reject err
+        promise = promise.then action.interceptor.success, action.interceptor.error
         return promise if instCall
         value.$promise = promise
         value.$resolved = false
