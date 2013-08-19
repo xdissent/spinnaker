@@ -197,5 +197,13 @@ angular.module('myApp', ['spinnaker']).config ['spinnakerProvider', (sp) ->
     update: method: 'put'
     destroy: method: 'delete'
     query: method: 'get', isArray: true
+
+  # Change the global interceptors (which are no-ops by default)
+  # default: (shown)
+
+  sp.setDefaultInterceptor ['$q', ($q) ->
+    success: (resource) -> resource
+    error: (err) -> $q.reject err
+  ]
 ]
 ```
