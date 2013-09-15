@@ -1,106 +1,204 @@
 
 describe 'spinnaker', ->
 
-  beforeEach module 'spinnaker'
+  beforeEach module 'spinnaker', (spinnakerProvider) ->
+    spinnakerProvider.setTransport spinnakerProvider.httpTransport
+
   beforeEach inject ($injector) ->
-    @spinnakerMock = $injector.get 'spinnakerMock'
     @spinnaker = $injector.get 'spinnaker'
+    @scope = $injector.get '$rootScope'
+    @http = $injector.get '$httpBackend'
 
   afterEach ->
-    @spinnakerMock.flush()
-    @spinnakerMock.verifyNoOutstandingExpectation()
+    @http.verifyNoOutstandingExpectation()
 
-  it 'should build resource', ->
-    Widget = @spinnaker 'widget'
-    expect(typeof Widget).toBe 'function'
-    expect(typeof Widget.get).toBe 'function'
-    expect(typeof Widget.create).toBe 'function'
-    expect(typeof Widget.save).toBe 'function'
-    expect(typeof Widget.destroy).toBe 'function'
-    expect(typeof Widget.query).toBe 'function'
+  it 'should GET a resource collection', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana'}]
+    users = @spinnaker '/users'
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
 
-  it 'should default to empty parameters', ->
-    @spinnakerMock.expect('GET', 'URL').respond {}
-    @spinnaker('name', 'URL').query()
+  it 'should GET a single resource', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana'}]
+    user = @spinnaker '/users/1', single: true
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
 
+  it 'should POST a resource collection', ->
+    @http.expect('POST', '/users', '{"users":[{"name":"banana"},{"name":"orange"}]}')
+      .respond users: [{id: 1, name: 'banana'},{id: 2, name: 'orange'}]
+    users = @spinnaker '/users', data: [{name: 'banana'},{name: 'orange'}]
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 2
+    expect(users[0].name).toBe 'banana'
+    expect(users[1].name).toBe 'orange'
 
-  it 'should ignore slashes of undefinend parameters', ->
-    S = @spinnaker 'Path', '/Path/:a/:b/:c'
+  it 'should POST a single resource', ->
+    @http.expect('POST', '/users', '{"users":[{"name":"banana"}]}')
+      .respond users: [{id: 1, name: 'banana'}]
+    user = @spinnaker '/users', data: name: 'banana'
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
 
-    @spinnakerMock.when('GET', '/Path').respond {}
-    @spinnakerMock.when('GET', '/Path/0').respond {}
-    @spinnakerMock.when('GET', '/Path/false').respond {}
-    @spinnakerMock.when('GET', '/Path').respond {}
-    @spinnakerMock.when('GET', '/Path').respond {}
-    @spinnakerMock.when('GET', '/Path').respond {}
-    @spinnakerMock.when('GET', '/Path/1').respond {}
-    @spinnakerMock.when('GET', '/Path/2/3').respond {}
-    @spinnakerMock.when('GET', '/Path/4/5').respond {}
-    @spinnakerMock.when('GET', '/Path/6/7/8').respond {}
+  it 'should PATCH a single resource', ->
+    @http.expect('PATCH', '/users/1', '[{"op":"replace","path":"/users/0/name","value":"BANANA"}]')
+      .respond users: [{id: 1, name: 'BANANA'}]
+    user = @spinnaker '/users/1', method: 'patch', data: name: 'BANANA'
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'BANANA'
 
-    S.get {}
-    S.get a: 0
-    S.get a: false
-    S.get a: null
-    S.get a: undefined
-    S.get a: ''
-    S.get a: 1
-    S.get a: 2, b: 3
-    S.get a: 4, c: 5
-    S.get a: 6, b: 7, c: 8
+  it 'should PATCH a resource collection', ->
+    @http.expect('PATCH', '/users', '[{"op":"replace","path":"/users/0/name","value":"BANANA"},{"op":"replace","path":"/users/1/name","value":"ORANGE"}]')
+      .respond users: [{id: 1, name: 'BANANA'},{id: 2, name: 'ORANGE'}]
+    users = @spinnaker '/users', method: 'patch', data: [{name: 'BANANA'},{name: 'ORANGE'}]
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 2
+    expect(users[0].name).toBe 'BANANA'
+    expect(users[1].name).toBe 'ORANGE'
 
-  # Nope! =)
-  xit 'should not ignore leading slashes of undefinend parameters that have non-slash trailing sequence', ->
-    S = @spinnaker 'Path', '/Path/:a.foo/:b.bar/:c.baz'
+  it 'should DELETE a single resource', ->
+    @http.expect('DELETE', '/users/1').respond null
+    deleted = false
+    @spinnaker('/users/1', method: 'delete').then -> deleted = true
+    @scope.$digest()
+    @http.flush()
+    expect(deleted).toBeTruthy()
 
-    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/0.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/false.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/1.foo/.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/2.foo/3.bar.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/4.foo/.bar/5.baz').respond {}
-    @spinnakerMock.when('GET', '/Path/6.foo/7.bar/8.baz').respond {}
+  it 'should GET a single resource and populate a link as a string', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    user = @spinnaker '/users/1', single: true, populate: 'photos'
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(user.photos.length).toBe 2
+    expect(user.photos[0].src).toBe 'b.jpg'
 
-    S.get {}
-    S.get a: 0
-    S.get a: false
-    S.get a: null
-    S.get a: undefined
-    S.get a: ''
-    S.get a: 1
-    S.get a: 2, b: 3
-    S.get a: 4, c: 5
-    S.get a: 6, b: 7, c: 8
+  it 'should GET a resource collection and populate a link as a string', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    users = @spinnaker '/users', populate: 'photos'
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
+    expect(users[0].photos.length).toBe 2
+    expect(users[0].photos[0].src).toBe 'b.jpg'
 
-  it 'should create resource', ->
-    Widget = @spinnaker 'widget'
-    @spinnakerMock.expect('POST', '/widget', name: 'misko').respond id: 123, name: 'misko'
+  it 'should GET a single resource and populate links as an array of strings', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    user = @spinnaker '/users/1', single: true, populate: ['photos', 'groups']
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(user.photos.length).toBe 2
+    expect(user.photos[0].src).toBe 'b.jpg'
+    expect(user.groups.length).toBe 1
+    expect(user.groups[0].name).toBe 'Fruits'
 
-    cb = jasmine.createSpy()
-    w = Widget.save name: 'misko', cb
-    expect(w.name).toEqual 'misko'
-    expect(cb).not.toHaveBeenCalled()
+  it 'should GET a resource collection and populate links as an array of strings', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    users = @spinnaker '/users', populate: ['photos', 'groups']
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
+    expect(users[0].name).toBe 'banana'
+    expect(users[0].photos.length).toBe 2
+    expect(users[0].photos[0].src).toBe 'b.jpg'
+    expect(users[0].groups.length).toBe 1
+    expect(users[0].groups[0].name).toBe 'Fruits'
 
-    @spinnakerMock.flush()
-    expect(w.id).toEqual 123
-    expect(w.name).toEqual 'misko'
-    expect(cb).toHaveBeenCalled()
+  it 'should GET a single resource and populate a link as an object', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    user = @spinnaker '/users/1', single: true, populate: link: 'photos'
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(user.photos.length).toBe 2
+    expect(user.photos[0].src).toBe 'b.jpg'
 
+  it 'should GET a resource collection and populate a link as an object', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    users = @spinnaker '/users', populate: link: 'photos'
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
+    expect(users[0].photos.length).toBe 2
+    expect(users[0].photos[0].src).toBe 'b.jpg'
 
-  it 'should handle errors', ->
-    Widget = @spinnaker 'widget'
-    @spinnakerMock.expect('POST', '/widget', name: 'misko').respond status: 503
+  it 'should GET a single resource and populate links as an array of objects', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    user = @spinnaker '/users/1', single: true, populate: [{link: 'photos'}, {link: 'groups'}]
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(user.photos.length).toBe 2
+    expect(user.photos[0].src).toBe 'b.jpg'
+    expect(user.groups.length).toBe 1
+    expect(user.groups[0].name).toBe 'Fruits'
 
-    cbSuccess = jasmine.createSpy()
-    cbError = jasmine.createSpy()
-    w = Widget.save name: 'misko', cbSuccess, cbError
-    expect(cbSuccess).not.toHaveBeenCalled()
-    expect(cbError).not.toHaveBeenCalled()
+  it 'should GET a resource collection and populate links as an array of objects', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    users = @spinnaker '/users', populate: [{link: 'photos'}, {link: 'groups'}]
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
+    expect(users[0].name).toBe 'banana'
+    expect(users[0].photos.length).toBe 2
+    expect(users[0].photos[0].src).toBe 'b.jpg'
+    expect(users[0].groups.length).toBe 1
+    expect(users[0].groups[0].name).toBe 'Fruits'
 
-    @spinnakerMock.flush()
-    expect(cbSuccess).not.toHaveBeenCalled()
-    expect(cbError).toHaveBeenCalled()
+  it 'should GET a single resource and populate links as a mixed array', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    user = @spinnaker '/users/1', single: true, populate: ['photos', link: 'groups']
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(user.photos.length).toBe 2
+    expect(user.photos[0].src).toBe 'b.jpg'
+    expect(user.groups.length).toBe 1
+    expect(user.groups[0].name).toBe 'Fruits'
+
+  it 'should GET a resource collection and populate links as a mixed array', ->
+    @http.expect('GET', '/users').respond users: [{id: 1, name: 'banana', links: {photos: '/users/1/photos', groups: '/users/1/groups'}}]
+    @http.expect('GET', '/users/1/photos').respond photos: [{id: 1, src: 'b.jpg', links: {user: '/users/1'}},{id: 2, src: 'y.jpg', links: {user: '/users/1'}}]
+    @http.expect('GET', '/users/1/groups').respond groups: [{id: 1, name: 'Fruits', links: {users: '/groups/1/users'}}]
+    users = @spinnaker '/users', populate: ['photos', link: 'groups']
+    @scope.$digest()
+    @http.flush()
+    expect(users.length).toBe 1
+    expect(users[0].name).toBe 'banana'
+    expect(users[0].photos.length).toBe 2
+    expect(users[0].photos[0].src).toBe 'b.jpg'
+    expect(users[0].groups.length).toBe 1
+    expect(users[0].groups[0].name).toBe 'Fruits'
+
+  it 'should cache compound documents', ->
+    @http.expect('GET', '/users/1').respond users: [{id: 1, name: 'banana'}], photos: [{id: 1, src: 'b.jpg', href: '/photos/1'},{id: 2, src: 'y.jpg', href: '/photos/2'}]
+    photo = null
+    user = @spinnaker '/users/1', single: true
+    user.$promise.then =>
+      photo = @spinnaker '/photos/1', single: true
+    @scope.$digest()
+    @http.flush()
+    expect(user.name).toBe 'banana'
+    expect(photo.src).toBe 'b.jpg'
 
