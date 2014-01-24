@@ -75,7 +75,7 @@ class SpinnakerProvider
         params ?= if instCall then @ else {}
         method = action.method ? 'get'
         method = action.method params if angular.isFunction action.method
-        data ?= params if /^(POST|PUT|PATCH|DELETE)$/i.test method
+        data ?= params if /^(GET|POST|PUT|PATCH|DELETE)$/i.test method
         resourceClass = action.resource ? Resource
         value = if action.isArray
           new ResourceCollection resourceClass, params, data, action.filter
