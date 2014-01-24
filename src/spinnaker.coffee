@@ -48,6 +48,10 @@ class SpinnakerProvider
       request = (url, data={}, method='get') ->
         deferred = $q.defer()
         socket[method] url, data, (data) ->
+          # For some reason, GETs by id don't return an array, so test for that case
+          if Object::toString.call(data) isnt "[object Array]"
+            dataArray = [data]
+            data = dataArray
           $rootScope.$apply ->
             return deferred.reject data if data.status?
             deferred.resolve data
